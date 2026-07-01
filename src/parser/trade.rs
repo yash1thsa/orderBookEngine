@@ -1,4 +1,4 @@
-use crate::schema::itchformat::{ItchMessage, AddOrderMessage};
+use crate::schema::itchformat::{ItchMessage, TradeMessage};
 use super::common::parse_timestamp;
 
 pub fn parse_at(data: &[u8], pos: usize) -> (usize, ItchMessage) {
@@ -8,23 +8,16 @@ pub fn parse_at(data: &[u8], pos: usize) -> (usize, ItchMessage) {
     let tracking_number = u16::from_be_bytes([b[3], b[4]]);
     let timestamp = parse_timestamp(&b[5..11]);
 
-    let order_reference_number =
-        u64::from_be_bytes(b[11..19].try_into().unwrap());
-
+    let order_reference_number = u64::from_be_bytes(b[11..19].try_into().unwrap());
     let buy_sell_indicator = b[19];
-
-    let shares =
-        u32::from_be_bytes([b[20], b[21], b[22], b[23]]);
-
-    let mut stock = [0u8; 8];
-    stock.copy_from_slice(&b[24..32]);
-
-    let price =
-        u32::from_be_bytes([b[32], b[33], b[34], b[35]]);
+    let shares = u32::from_be_bytes([b[20], b[21], b[22], b[23]]);
+    let stock: [u8; 8] = b[24..32].try_into().unwrap();
+    let price = u32::from_be_bytes([b[32], b[33], b[34], b[35]]);
+    let match_number = u64::from_be_bytes(b[36..44].try_into().unwrap());
 
     (
-        36,
-        ItchMessage::AddOrder(AddOrderMessage {
+        44,
+        ItchMessage::Trade(TradeMessage {
             stock_locate,
             tracking_number,
             timestamp,
@@ -33,6 +26,7 @@ pub fn parse_at(data: &[u8], pos: usize) -> (usize, ItchMessage) {
             shares,
             stock,
             price,
+            match_number,
         }),
     )
 }

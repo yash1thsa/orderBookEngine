@@ -1,4 +1,4 @@
-use crate::schema::itchformat::{ItchMessage, OrderCancelMessage};
+use crate::schema::itchformat::{ItchMessage, StockTradingActionMessage};
 use super::common::parse_timestamp;
 
 pub fn parse_at(data: &[u8], pos: usize) -> (usize, ItchMessage) {
@@ -8,20 +8,21 @@ pub fn parse_at(data: &[u8], pos: usize) -> (usize, ItchMessage) {
     let tracking_number = u16::from_be_bytes([b[3], b[4]]);
     let timestamp = parse_timestamp(&b[5..11]);
 
-    let order_reference_number =
-        u64::from_be_bytes(b[11..19].try_into().unwrap());
-
-    let cancelled_shares =
-        u32::from_be_bytes([b[19], b[20], b[21], b[22]]);
+    let stock: [u8; 8] = b[11..19].try_into().unwrap();
+    let trading_state = b[19];
+    let reserved = b[20];
+    let reason = b[21];
 
     (
-        23,
-        ItchMessage::OrderCancel(OrderCancelMessage {
+        22,
+        ItchMessage::StockTradingAction(StockTradingActionMessage {
             stock_locate,
             tracking_number,
             timestamp,
-            order_reference_number,
-            cancelled_shares,
+            stock,
+            trading_state,
+            reserved,
+            reason,
         }),
     )
 }

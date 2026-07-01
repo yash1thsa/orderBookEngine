@@ -2,10 +2,17 @@ use crate::schema::itchformat::{ItchMessage, UnknownMessage};
 
 use super::{
     add_order,
+    add_order_mpid,
+    order_executed_with_price,
     order_cancel,
     order_executed,
+    order_delete,
+    order_replace,
+    cross_trade,
+    stock_trading_action,
+    trade,
     stock_directory,
-    system_event,
+    system_event
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -15,6 +22,13 @@ pub enum MessageType {
     AddOrder,
     OrderExecuted,
     OrderCancel,
+    AddOrderMPID,
+    OrderExecutedWithPrice,
+    CrossTrade,
+    Trade,
+    OrderDelete,
+    OrderReplace,
+    StockTradingAction,
     Unknown,
 }
 
@@ -26,6 +40,13 @@ impl From<u8> for MessageType {
             b'A' => MessageType::AddOrder,
             b'E' => MessageType::OrderExecuted,
             b'X' => MessageType::OrderCancel,
+            b'F' => MessageType::AddOrderMPID,
+            b'C' => MessageType::OrderExecutedWithPrice,
+            b'Q' => MessageType::CrossTrade,
+            b'P' => MessageType::Trade,
+            b'D' => MessageType::OrderDelete,
+            b'U' => MessageType::OrderReplace,
+            b'H' => MessageType::StockTradingAction,
             _ => MessageType::Unknown,
         }
     }
@@ -102,6 +123,27 @@ impl<'a> L3Parser<'a> {
 
             MessageType::OrderCancel => {
                 order_cancel::parse_at(self.data, msg_start)
+            }
+            MessageType::AddOrderMPID => {
+                add_order_mpid::parse_at(self.data, msg_start)
+            }
+            MessageType::OrderExecutedWithPrice => {
+                order_executed_with_price::parse_at(self.data, msg_start)
+            }
+            MessageType::CrossTrade => {
+                cross_trade::parse_at(self.data, msg_start)
+            }
+            MessageType::Trade => {
+                trade::parse_at(self.data, msg_start)
+            }
+            MessageType::OrderDelete => {
+                order_delete::parse_at(self.data, msg_start)
+            }
+            MessageType::OrderReplace => {
+                order_replace::parse_at(self.data, msg_start)
+            }
+            MessageType::StockTradingAction => {
+                stock_trading_action::parse_at(self.data, msg_start)
             }
 
             MessageType::Unknown => (

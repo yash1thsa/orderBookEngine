@@ -46,7 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut parser = L3Parser::new(&buffer);
 
     // LIMIT to 500 messages (prevents hanging)
-    let messages = parser.parse_n(500);
+    let messages = parser.parse_n(200000000);
 
     println!("\nParsed {} messages", messages.len());
 
