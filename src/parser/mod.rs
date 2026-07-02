@@ -12,6 +12,9 @@ pub mod trade;
 pub mod cross_trade;
 pub mod order_delete;
 pub mod order_replace;
+pub mod order_priority_update_y;
+pub mod net_order_imbalance_indicator;
+pub mod market_participant_position;
 pub mod stock_trading_action;
 
 pub use parser::L3Parser;

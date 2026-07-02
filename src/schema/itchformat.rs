@@ -16,6 +16,9 @@ pub enum ItchMessage {
 
     Trade(TradeMessage),
     CrossTrade(CrossTradeMessage),
+    OrderPriorityUpdateY(OrderPriorityUpdateYMessage),
+    NetOrderImbalanceIndicator(NetOrderImbalanceIndicatorMessage),
+    MarketParticipantPosition(MarketParticipantPositionMessage),
 
     Unknown(UnknownMessage),
 }
@@ -39,8 +42,32 @@ impl ItchMessage {
 
             ItchMessage::Trade(_) => "Trade",
             ItchMessage::CrossTrade(_) => "CrossTrade",
+            ItchMessage::OrderPriorityUpdateY(_) => "OrderPriorityUpdateY",
+            ItchMessage::NetOrderImbalanceIndicator(_) => "NetOrderImbalanceIndicator",
+            ItchMessage::MarketParticipantPosition(_) => "MarketParticipantPosition",
 
             ItchMessage::Unknown(_) => "Unknown",
+        }
+    }
+
+    pub fn timestamp(&self) -> Option<u64> {
+        match self {
+            ItchMessage::SystemEvent(m) => Some(m.timestamp),
+            ItchMessage::StockDirectory(m) => Some(m.timestamp),
+            ItchMessage::StockTradingAction(m) => Some(m.timestamp),
+            ItchMessage::AddOrder(m) => Some(m.timestamp),
+            ItchMessage::AddOrderMPID(m) => Some(m.timestamp),
+            ItchMessage::OrderExecuted(m) => Some(m.timestamp),
+            ItchMessage::OrderExecutedWithPrice(m) => Some(m.timestamp),
+            ItchMessage::OrderCancel(m) => Some(m.timestamp),
+            ItchMessage::OrderDelete(m) => Some(m.timestamp),
+            ItchMessage::OrderReplace(m) => Some(m.timestamp),
+            ItchMessage::Trade(m) => Some(m.timestamp),
+            ItchMessage::CrossTrade(m) => Some(m.timestamp),
+            ItchMessage::OrderPriorityUpdateY(m) => Some(m.timestamp),
+            ItchMessage::NetOrderImbalanceIndicator(m) => Some(m.timestamp),
+            ItchMessage::MarketParticipantPosition(m) => Some(m.timestamp),
+            ItchMessage::Unknown(_) => None,
         }
     }
 }
@@ -55,6 +82,47 @@ pub struct SystemEventMessage {
     pub tracking_number: u16,
     pub timestamp: u64,
     pub event_code: u8,
+}
+
+#[derive(Debug)]
+pub struct OrderPriorityUpdateYMessage {
+    pub stock_locate: u16,
+    pub tracking_number: u32,
+    pub timestamp: u64,
+    pub payload: [u8; 7],
+}
+
+#[derive(Debug)]
+pub struct NetOrderImbalanceIndicatorMessage {
+    pub stock_locate: u16,
+    pub tracking_number: u16,
+    pub timestamp: u64,
+
+    pub paired_shares: u64,
+    pub imbalance_shares: u64,
+    pub imbalance_direction: u8,
+
+    pub stock: [u8; 8],
+
+    pub far_price: u32,
+    pub near_price: u32,
+    pub current_reference_price: u32,
+
+    pub cross_type: u8,
+    pub price_variation_indicator: u8,
+}
+
+#[derive(Debug)]
+pub struct MarketParticipantPositionMessage {
+    pub stock_locate: u16,
+    pub tracking_number: u16,
+    pub timestamp: u64,
+
+    pub stock: [u8; 8],
+
+    pub primary_market_maker: u8,
+    pub market_maker_mode: u8,
+    pub market_participant_state: u8,
 }
 
 #[derive(Debug)]

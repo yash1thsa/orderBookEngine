@@ -12,6 +12,9 @@ use super::{
     stock_trading_action,
     trade,
     stock_directory,
+    order_priority_update_y,
+    net_order_imbalance_indicator,
+    market_participant_position,
     system_event
 };
 
@@ -29,6 +32,9 @@ pub enum MessageType {
     OrderDelete,
     OrderReplace,
     StockTradingAction,
+    OrderPriorityUpdateY,
+    NetOrderImbalanceIndicator,
+    MarketParticipantPosition,
     Unknown,
 }
 
@@ -47,6 +53,9 @@ impl From<u8> for MessageType {
             b'D' => MessageType::OrderDelete,
             b'U' => MessageType::OrderReplace,
             b'H' => MessageType::StockTradingAction,
+            b'Y' => MessageType::OrderPriorityUpdateY,
+            b'I' => MessageType::NetOrderImbalanceIndicator,
+            b'L' => MessageType::MarketParticipantPosition,
             _ => MessageType::Unknown,
         }
     }
@@ -62,18 +71,15 @@ impl<'a> L3Parser<'a> {
         Self { data, pos: 0 }
     }
 
-    pub fn parse_all(&mut self) -> Vec<ItchMessage> {
-        self.parse_n(usize::MAX)
+    pub fn position(&self) -> usize {
+        self.pos
     }
 
-    pub fn parse_n(&mut self, limit: usize) -> Vec<ItchMessage> {
-        let mut out = Vec::with_capacity(limit);
+    pub fn parse_all(&mut self) -> Vec<ItchMessage> {
+        let mut out = Vec::new();
 
-        while out.len() < limit {
-            match self.parse_next() {
-                Some(msg) => out.push(msg),
-                None => break,
-            }
+        while let Some(msg) = self.parse_next() {
+            out.push(msg);
         }
 
         out
@@ -144,6 +150,15 @@ impl<'a> L3Parser<'a> {
             }
             MessageType::StockTradingAction => {
                 stock_trading_action::parse_at(self.data, msg_start)
+            }
+            MessageType::OrderPriorityUpdateY => {
+                order_priority_update_y::parse_at(self.data, msg_start)
+            }
+            MessageType::NetOrderImbalanceIndicator => {
+                net_order_imbalance_indicator::parse_at(self.data, msg_start)
+            }
+            MessageType::MarketParticipantPosition => {
+                market_participant_position::parse_at(self.data, msg_start)
             }
 
             MessageType::Unknown => (
