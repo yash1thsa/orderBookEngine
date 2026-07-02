@@ -8,14 +8,15 @@ use parquet::arrow::ArrowWriter;
 use std::fs::File;
 use crate::schema::itchformat::*;
 
-pub struct ParquetWriter {
+// ⚡ ADDED: The struct now accepts lifetime `'a` to safely hold zero-copy messages in its batch cache
+pub struct ParquetWriter<'a> {
     batch_size: usize,
     output_dir: String,
-    batches: HashMap<String, Vec<ItchMessage>>,
+    batches: HashMap<String, Vec<ItchMessage<'a>>>,
     file_counters: HashMap<String, usize>,
 }
 
-impl ParquetWriter {
+impl<'a> ParquetWriter<'a> {
     pub fn new(output_dir: String, batch_size: usize) -> Self {
         fs::create_dir_all(&output_dir).ok();
         Self {
@@ -26,7 +27,7 @@ impl ParquetWriter {
         }
     }
 
-    pub fn add_message(&mut self, msg: ItchMessage) {
+    pub fn add_message(&mut self, msg: ItchMessage<'a>) {
         let msg_type = msg.name().to_string();
         self.batches.entry(msg_type.clone()).or_insert_with(Vec::new).push(msg);
 
@@ -38,7 +39,7 @@ impl ParquetWriter {
         }
     }
 
-    fn write_batch(&mut self, msg_type: &str, messages: Vec<ItchMessage>) {
+    fn write_batch(&mut self, msg_type: &str, messages: Vec<ItchMessage<'a>>) {
         let counter = self.file_counters.entry(msg_type.to_string()).or_insert(0);
         let filename = format!("{}/{}_{:06}.parquet", self.output_dir, msg_type, counter);
         *counter += 1;
@@ -63,7 +64,7 @@ impl ParquetWriter {
         }
     }
 
-    fn write_system_event(&self, filename: &str, messages: Vec<ItchMessage>) {
+    fn write_system_event(&self, filename: &str, messages: Vec<ItchMessage<'a>>) {
         let mut timestamps = Vec::new();
         let mut event_codes = Vec::new();
 
@@ -84,7 +85,7 @@ impl ParquetWriter {
         );
     }
 
-    fn write_stock_directory(&self, filename: &str, messages: Vec<ItchMessage>) {
+    fn write_stock_directory(&self, filename: &str, messages: Vec<ItchMessage<'a>>) {
         let mut stock_locates = Vec::new();
         let mut tracking_numbers = Vec::new();
         let mut timestamps = Vec::new();
@@ -111,7 +112,7 @@ impl ParquetWriter {
         );
     }
 
-    fn write_add_order(&self, filename: &str, messages: Vec<ItchMessage>) {
+    fn write_add_order(&self, filename: &str, messages: Vec<ItchMessage<'a>>) {
         let mut stock_locates = Vec::new();
         let mut timestamps = Vec::new();
         let mut prices = Vec::new();
@@ -138,7 +139,7 @@ impl ParquetWriter {
         );
     }
 
-    fn write_order_executed(&self, filename: &str, messages: Vec<ItchMessage>) {
+    fn write_order_executed(&self, filename: &str, messages: Vec<ItchMessage<'a>>) {
         let mut stock_locates = Vec::new();
         let mut timestamps = Vec::new();
         let mut executed_shares = Vec::new();
@@ -162,7 +163,7 @@ impl ParquetWriter {
         );
     }
 
-    fn write_order_cancel(&self, filename: &str, messages: Vec<ItchMessage>) {
+    fn write_order_cancel(&self, filename: &str, messages: Vec<ItchMessage<'a>>) {
         let mut stock_locates = Vec::new();
         let mut timestamps = Vec::new();
 
@@ -183,7 +184,7 @@ impl ParquetWriter {
         );
     }
 
-    fn write_add_order_mpid(&self, filename: &str, messages: Vec<ItchMessage>) {
+    fn write_add_order_mpid(&self, filename: &str, messages: Vec<ItchMessage<'a>>) {
         let mut stock_locates = Vec::new();
         let mut timestamps = Vec::new();
 
@@ -204,7 +205,7 @@ impl ParquetWriter {
         );
     }
 
-    fn write_order_executed_with_price(&self, filename: &str, messages: Vec<ItchMessage>) {
+    fn write_order_executed_with_price(&self, filename: &str, messages: Vec<ItchMessage<'a>>) {
         let mut stock_locates = Vec::new();
         let mut timestamps = Vec::new();
         let mut prices = Vec::new();
@@ -228,7 +229,7 @@ impl ParquetWriter {
         );
     }
 
-    fn write_cross_trade(&self, filename: &str, messages: Vec<ItchMessage>) {
+    fn write_cross_trade(&self, filename: &str, messages: Vec<ItchMessage<'a>>) {
         let mut stock_locates = Vec::new();
         let mut timestamps = Vec::new();
 
@@ -249,7 +250,7 @@ impl ParquetWriter {
         );
     }
 
-    fn write_trade(&self, filename: &str, messages: Vec<ItchMessage>) {
+    fn write_trade(&self, filename: &str, messages: Vec<ItchMessage<'a>>) {
         let mut stock_locates = Vec::new();
         let mut timestamps = Vec::new();
 
@@ -270,7 +271,7 @@ impl ParquetWriter {
         );
     }
 
-    fn write_order_delete(&self, filename: &str, messages: Vec<ItchMessage>) {
+    fn write_order_delete(&self, filename: &str, messages: Vec<ItchMessage<'a>>) {
         let mut stock_locates = Vec::new();
         let mut timestamps = Vec::new();
 
@@ -291,7 +292,7 @@ impl ParquetWriter {
         );
     }
 
-    fn write_order_replace(&self, filename: &str, messages: Vec<ItchMessage>) {
+    fn write_order_replace(&self, filename: &str, messages: Vec<ItchMessage<'a>>) {
         let mut stock_locates = Vec::new();
         let mut timestamps = Vec::new();
 
@@ -312,7 +313,7 @@ impl ParquetWriter {
         );
     }
 
-    fn write_stock_trading_action(&self, filename: &str, messages: Vec<ItchMessage>) {
+    fn write_stock_trading_action(&self, filename: &str, messages: Vec<ItchMessage<'a>>) {
         let mut stock_locates = Vec::new();
         let mut timestamps = Vec::new();
 
@@ -333,7 +334,7 @@ impl ParquetWriter {
         );
     }
 
-    fn write_order_priority_update_y(&self, filename: &str, messages: Vec<ItchMessage>) {
+    fn write_order_priority_update_y(&self, filename: &str, messages: Vec<ItchMessage<'a>>) {
         let mut stock_locates = Vec::new();
         let mut timestamps = Vec::new();
 
@@ -354,7 +355,7 @@ impl ParquetWriter {
         );
     }
 
-    fn write_net_order_imbalance_indicator(&self, filename: &str, messages: Vec<ItchMessage>) {
+    fn write_net_order_imbalance_indicator(&self, filename: &str, messages: Vec<ItchMessage<'a>>) {
         let mut stock_locates = Vec::new();
         let mut timestamps = Vec::new();
         let mut imbalance_shares = Vec::new();
@@ -378,7 +379,7 @@ impl ParquetWriter {
         );
     }
 
-    fn write_market_participant_position(&self, filename: &str, messages: Vec<ItchMessage>) {
+    fn write_market_participant_position(&self, filename: &str, messages: Vec<ItchMessage<'a>>) {
         let mut stock_locates = Vec::new();
         let mut timestamps = Vec::new();
 

@@ -1,23 +1,53 @@
 use crate::schema::itchformat::{ItchMessage, NetOrderImbalanceIndicatorMessage};
-use super::common::parse_timestamp;
 
-pub fn parse_at(data: &[u8], pos: usize) -> (usize, ItchMessage) {
-    let b = &data[pos..];
+// 1. Force the compiler to pack the struct matching the 43-byte NOII spec layout
+#[repr(packed)]
+struct RawNetOrderImbalanceIndicator {
+    message_type: u8,               // Offset 0 (1 byte)
+    stock_locate: u16,              // Offset 1 (2 bytes)
+    tracking_number: u16,           // Offset 3 (2 bytes)
+    timestamp: [u8; 6],             // Offset 5 (6 bytes)
+    paired_shares: u64,             // Offset 11 (8 bytes)
+    imbalance_shares: u64,          // Offset 19 (8 bytes)
+    current_reference_price: u32,   // Offset 27 (4 bytes)
+    buy_sell_indicator: u8,         // Offset 31 (1 byte) -> Kept as padding/placeholder to preserve offsets
+    cross_type: u8,                 // Offset 32 (1 byte)
+    price_variation_indicator: u8,  // Offset 33 (1 byte)
+    imbalance_direction: u8,        // Offset 34 (1 byte)
+    stock: [u8; 8],                 // Offset 35 (8 bytes)
+}
 
-    let stock_locate = u16::from_be_bytes([b[1], b[2]]);
-    let tracking_number = u16::from_be_bytes([b[3], b[4]]);
-    let timestamp = parse_timestamp(&b[5..11]);
+// 2. Accept and return the lifetime parameter '<'a>' for zero-copy connection
+pub fn parse_at<'a>(data: &'a [u8], pos: usize) -> (usize, ItchMessage<'a>) {
+    // Safety boundary validation check
+    if pos + 43 > data.len() {
+        panic!("Malformed ITCH packet: Buffer overflow while parsing NetOrderImbalanceIndicator at position {}", pos);
+    }
 
-    let paired_shares = u64::from_be_bytes(b[11..19].try_into().unwrap());
-    let imbalance_shares = u64::from_be_bytes(b[19..27].try_into().unwrap());
-    let current_reference_price = u32::from_be_bytes([b[27], b[28], b[29], b[30]]);
+    // 3. ZERO-COPY POINTER CAST: Access memory coordinates directly with zero allocation
+    let raw = unsafe { &*(data.as_ptr().add(pos) as *const RawNetOrderImbalanceIndicator) };
 
-    let _buy_sell_indicator = b[31];
-    let cross_type = b[32];
-    let price_variation_indicator = b[33];
-    let imbalance_direction = b[34];
+    // 4. Extract data directly from addresses and flip network Big-Endian format to CPU format
+    let stock_locate = u16::from_be(raw.stock_locate);
+    let tracking_number = u16::from_be(raw.tracking_number);
+    let paired_shares = u64::from_be(raw.paired_shares);
+    let imbalance_shares = u64::from_be(raw.imbalance_shares);
+    let current_reference_price = u32::from_be(raw.current_reference_price);
 
-    let stock: [u8; 8] = b[35..43].try_into().unwrap();
+    let cross_type = raw.cross_type;
+    let price_variation_indicator = raw.price_variation_indicator;
+    let imbalance_direction = raw.imbalance_direction;
+
+    // Static arrays match direct memory block layout coordinates
+    let stock = raw.stock;
+
+    // Optimized 6-byte inline bit-shift logic for low-overhead timestamp parsing
+    let timestamp = ((raw.timestamp[0] as u64) << 40)
+        | ((raw.timestamp[1] as u64) << 32)
+        | ((raw.timestamp[2] as u64) << 24)
+        | ((raw.timestamp[3] as u64) << 16)
+        | ((raw.timestamp[4] as u64) << 8)
+        | (raw.timestamp[5] as u64);
 
     (
         43,
@@ -29,8 +59,8 @@ pub fn parse_at(data: &[u8], pos: usize) -> (usize, ItchMessage) {
             imbalance_shares,
             imbalance_direction,
             stock,
-            far_price: 0,
-            near_price: 0,
+            far_price: 0,   // Kept as 0 to maintain your exact struct signature
+            near_price: 0,  // Kept as 0 to maintain your exact struct signature
             current_reference_price,
             cross_type,
             price_variation_indicator,

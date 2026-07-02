@@ -1,20 +1,46 @@
 use crate::schema::itchformat::{ItchMessage, MarketParticipantPositionMessage};
-use super::common::parse_timestamp;
 
-pub fn parse_at(data: &[u8], pos: usize) -> (usize, ItchMessage) {
-    let b = &data[pos..];
+// 1. Force the compiler to pack the struct matching the 26-byte MarketParticipantPosition spec
+#[repr(packed)]
+struct RawMarketParticipantPosition {
+    message_type: u8,               // Offset 0 (1 byte)
+    stock_locate: u16,              // Offset 1 (2 bytes)
+    tracking_number: u16,           // Offset 3 (2 bytes)
+    timestamp: [u8; 6],             // Offset 5 (6 bytes)
+    mpid: [u8; 4],                  // Offset 11 (4 bytes) - Market Participant ID
+    stock: [u8; 8],                 // Offset 15 (8 bytes)
+    primary_market_maker: u8,       // Offset 23 (1 byte)
+    market_maker_mode: u8,          // Offset 24 (1 byte)
+    market_participant_state: u8,    // Offset 25 (1 byte)
+}
 
-    let stock_locate = u16::from_be_bytes([b[1], b[2]]);
-    let tracking_number = u16::from_be_bytes([b[3], b[4]]);
-    let timestamp = parse_timestamp(&b[5..11]);
+// 2. Accept and return the lifetime parameter '<'a>' for zero-copy connection
+pub fn parse_at<'a>(data: &'a [u8], pos: usize) -> (usize, ItchMessage<'a>) {
+    // Safety boundary validation check
+    if pos + 26 > data.len() {
+        panic!("Malformed ITCH packet: Buffer overflow while parsing MarketParticipantPosition at position {}", pos);
+    }
 
-    let _mpid = u32::from_be_bytes([b[11], b[12], b[13], b[14]]);
+    // 3. ZERO-COPY POINTER CAST: Read directly from raw memory address locations
+    let raw = unsafe { &*(data.as_ptr().add(pos) as *const RawMarketParticipantPosition) };
 
-    let stock: [u8; 8] = b[15..23].try_into().unwrap();
+    // 4. Extract fields and convert Big-Endian network format to native CPU integers
+    let stock_locate = u16::from_be(raw.stock_locate);
+    let tracking_number = u16::from_be(raw.tracking_number);
+    let primary_market_maker = raw.primary_market_maker;
+    let market_maker_mode = raw.market_maker_mode;
+    let market_participant_state = raw.market_participant_state;
 
-    let primary_market_maker = b[23];
-    let market_maker_mode = b[24];
-    let market_participant_state = b[25];
+    // Fixed arrays match raw sequential layout byte segments directly
+    let stock = raw.stock;
+
+    // Optimized 6-byte inline bit-shift logic for low-overhead timestamp parsing
+    let timestamp = ((raw.timestamp[0] as u64) << 40)
+        | ((raw.timestamp[1] as u64) << 32)
+        | ((raw.timestamp[2] as u64) << 24)
+        | ((raw.timestamp[3] as u64) << 16)
+        | ((raw.timestamp[4] as u64) << 8)
+        | (raw.timestamp[5] as u64);
 
     (
         26,

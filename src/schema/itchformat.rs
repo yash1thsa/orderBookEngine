@@ -1,5 +1,5 @@
 #[derive(Debug)]
-pub enum ItchMessage {
+pub enum ItchMessage<'a> {
     SystemEvent(SystemEventMessage),
     StockDirectory(StockDirectoryMessage),
     StockTradingAction(StockTradingActionMessage),
@@ -20,10 +20,11 @@ pub enum ItchMessage {
     NetOrderImbalanceIndicator(NetOrderImbalanceIndicatorMessage),
     MarketParticipantPosition(MarketParticipantPositionMessage),
 
-    Unknown(UnknownMessage),
+    // ⚡ FIXED: Parent enum variant now carries the slice's lifetime parameter
+    Unknown(UnknownMessage<'a>),
 }
 
-impl ItchMessage {
+impl<'a> ItchMessage<'a> {
     pub fn name(&self) -> &'static str {
         match self {
             ItchMessage::SystemEvent(_) => "SystemEvent",
@@ -264,8 +265,8 @@ pub struct CrossTradeMessage {
    UNKNOWN
    ========================= */
 
-#[derive(Debug)]
-pub struct UnknownMessage {
+#[derive(Clone, Debug)]
+pub struct UnknownMessage<'a> {
     pub message_type: u8,
-    pub body: Vec<u8>,
+    pub body: &'a [u8],
 }

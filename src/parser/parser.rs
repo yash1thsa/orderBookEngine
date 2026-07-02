@@ -75,7 +75,7 @@ impl<'a> L3Parser<'a> {
         self.pos
     }
 
-    pub fn parse_all(&mut self) -> Vec<ItchMessage> {
+    pub fn parse_all(&mut self) -> Vec<ItchMessage<'a>> {
         let mut out = Vec::new();
 
         while let Some(msg) = self.parse_next() {
@@ -85,7 +85,8 @@ impl<'a> L3Parser<'a> {
         out
     }
 
-    pub fn parse_next(&mut self) -> Option<ItchMessage> {
+    // ⚡ FIXED: Explicitly bind the Option output payload wrapper to the lifetime <'a>
+    pub fn parse_next(&mut self) -> Option<ItchMessage<'a>> {
         // Need at least 2-byte length + 1-byte type
         if self.pos + 3 > self.data.len() {
             return None;
@@ -110,6 +111,8 @@ impl<'a> L3Parser<'a> {
         // IMPORTANT:
         // Existing parse_at() functions expect the message type byte
         // to be at data[pos], so we pass msg_start.
+        // NOTE: Make sure your sub-modules (add_order, trade, etc.) are also refactored
+        // to return (usize, ItchMessage<'a>)
         let (_, msg) = match msg_type {
             MessageType::SystemEvent => {
                 system_event::parse_at(self.data, msg_start)
@@ -161,11 +164,12 @@ impl<'a> L3Parser<'a> {
                 market_participant_position::parse_at(self.data, msg_start)
             }
 
+            // ⚡ FIXED: Sliced directly using referencing tokens instead of allocating via .to_vec()
             MessageType::Unknown => (
                 msg_len,
                 ItchMessage::Unknown(UnknownMessage {
                     message_type: self.data[msg_start],
-                    body: self.data[msg_start..msg_start + msg_len].to_vec(),
+                    body: &self.data[msg_start..msg_start + msg_len],
                 }),
             ),
         };
