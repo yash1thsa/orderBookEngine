@@ -12,7 +12,7 @@ pub fn parse_at(data: &[u8], pos: usize) -> (usize, ItchMessage) {
     let imbalance_shares = u64::from_be_bytes(b[19..27].try_into().unwrap());
     let current_reference_price = u32::from_be_bytes([b[27], b[28], b[29], b[30]]);
 
-    let buy_sell_indicator = b[31];
+    let _buy_sell_indicator = b[31];
     let cross_type = b[32];
     let price_variation_indicator = b[33];
     let imbalance_direction = b[34];
@@ -33,8 +33,7 @@ pub fn parse_at(data: &[u8], pos: usize) -> (usize, ItchMessage) {
             near_price: 0,
             current_reference_price,
             cross_type,
-            price_variation_indicator: price_variation_indicator,
-            buy_sell_indicator: buy_sell_indicator,
+            price_variation_indicator,
         }),
     )
 }
