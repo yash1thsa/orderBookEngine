@@ -9,3 +9,6 @@ license = "MIT"
 [dependencies]
 memmap2 = "0.9"
 flate2 = "1.1"
+arrow = "48"
+parquet = "48"
+chrono = "=0.4.39"
