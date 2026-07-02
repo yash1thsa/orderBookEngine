@@ -3,14 +3,9 @@ use std::fs;
 use std::io::Write;
 use std::time::Instant;
 
-mod parser;
-mod schema;
-mod utils;
-
-use parser::L3Parser;
-// Note: ItchMessage now expects a lifetime parameter, e.g., ItchMessage<'a>
-use schema::itchformat::ItchMessage;
-use utils::{ParquetWriter, StatsCollector};
+use orderBookEngine::parser::L3Parser;
+use orderBookEngine::schema::itchformat::ItchMessage;
+use orderBookEngine::utils::{L3Writer, StatsCollector};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
@@ -23,42 +18,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let file_path = &args[1];
     let file = std::fs::File::open(file_path)?;
-
-    // ⚡ ZERO-COPY ROOT: Memory map the file.
-    // This buffer's lifetime defines the `'a` constraint for the entire pipeline execution.
+    // SAFETY: memmap2::map() is unsafe because it relies on OS-level memory mapping.
+    // The safety is guaranteed by the memmap2 crate which handles:
+    // - File handle validity (checked by File::open above)
+    // - Memory mapping bounds and alignment
+    // - Lifetime management (mmap owns the mapping)
     let mmap = unsafe { memmap2::MmapOptions::new().map(&file)? };
-    let buffer: &[u8] = &mmap;
+    let buffer: &[u8] = &mmap; // Behaves exactly like a normal byte slice!
 
     println!("File size: {} bytes", buffer.len());
 
     // ---- PARSER ----
-    // The compiler automatically ties the lifetime of `parser` and all generated
-    // messages directly to the underlying `buffer` slice.
-    let mut parser = L3Parser::new(buffer);
-    let mut parquet_writer = ParquetWriter::new("./output".to_string(), 100_000);
-    // let mut stats = StatsCollector::new();
+    let mut parser = L3Parser::new(&buffer);
+    let mut l3_writer = L3Writer::new("./output".to_string(), 3_000_000);
+    let mut stats = StatsCollector::new();
 
-    let mut message_count = 0;
-
-    // Stream through the file buffer via zero-copy pointer casting
     while let Some(msg) = parser.parse_next() {
-        // stats.process_message(&msg);
-
-        // ⚡ CRITICAL: `parquet_writer.add_message` must consume or copy the data
-        // into its internal row record groups before the loop steps forward.
-        parquet_writer.add_message(msg);
-
-        message_count += 1;
+        stats.process_message(&msg);
+        l3_writer.add_message(msg);
     }
 
-    // Flush remaining buffered rows to disk
-    parquet_writer.flush_remaining();
+    // Flush remaining messages
+    l3_writer.flush_remaining();
 
     // ---- STATISTICS ----
-    // stats.report();
+    stats.report();
 
     let elapsed = start.elapsed();
-    println!("Processed {} messages successfully.", message_count);
     println!("Time taken: {:.2}s", elapsed.as_secs_f64());
 
     std::io::stdout().flush()?;

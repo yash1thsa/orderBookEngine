@@ -18,6 +18,7 @@ use super::{
     system_event
 };
 
+/// ITCH protocol message types
 #[derive(Clone, Copy, Debug)]
 pub enum MessageType {
     SystemEvent,
@@ -61,20 +62,48 @@ impl From<u8> for MessageType {
     }
 }
 
+/// ITCH protocol parser for NASDAQ order book data
+///
+/// This parser processes ITCH (Integrated Trading and Clearing House) protocol messages
+/// using zero-copy techniques for high performance.
+///
+/// # Example
+///
+/// ```no_run
+/// use orderBookEngine::parser::L3Parser;
+///
+/// // Parse ITCH data
+/// let data = std::fs::read("data.itch")?;
+/// let mut parser = L3Parser::new(&data);
+///
+/// while let Some(msg) = parser.parse_next() {
+///     // Process message
+/// }
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
 pub struct L3Parser<'a> {
     data: &'a [u8],
     pos: usize,
 }
 
 impl<'a> L3Parser<'a> {
+    /// Creates a new parser from a byte slice
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - The ITCH protocol data to parse
     pub fn new(data: &'a [u8]) -> Self {
         Self { data, pos: 0 }
     }
 
+    /// Returns the current parsing position in bytes
     pub fn position(&self) -> usize {
         self.pos
     }
 
+    /// Parses all messages in the data and returns them as a vector
+    ///
+    /// This is a convenience method that consumes all messages at once.
     pub fn parse_all(&mut self) -> Vec<ItchMessage<'a>> {
         let mut out = Vec::new();
 
@@ -85,7 +114,23 @@ impl<'a> L3Parser<'a> {
         out
     }
 
-    // ⚡ FIXED: Explicitly bind the Option output payload wrapper to the lifetime <'a>
+    /// Parses the next message from the data
+    ///
+    /// Returns `None` when no more messages are available.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use orderBookEngine::parser::L3Parser;
+    ///
+    /// let data = std::fs::read("data.itch")?;
+    /// let mut parser = L3Parser::new(&data);
+    ///
+    /// while let Some(msg) = parser.parse_next() {
+    ///     // Process individual message
+    /// }
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     pub fn parse_next(&mut self) -> Option<ItchMessage<'a>> {
         // Need at least 2-byte length + 1-byte type
         if self.pos + 3 > self.data.len() {
@@ -164,7 +209,6 @@ impl<'a> L3Parser<'a> {
                 market_participant_position::parse_at(self.data, msg_start)
             }
 
-            // ⚡ FIXED: Sliced directly using referencing tokens instead of allocating via .to_vec()
             MessageType::Unknown => (
                 msg_len,
                 ItchMessage::Unknown(UnknownMessage {

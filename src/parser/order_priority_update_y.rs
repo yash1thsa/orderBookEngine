@@ -23,7 +23,12 @@ pub fn parse_at<'a>(data: &'a [u8], pos: usize) -> (usize, ItchMessage<'a>) {
         );
     }
 
-    // 4. ZERO-COPY POINTER CAST: Map our struct layout straight onto the raw memory coordinates
+    // SAFETY: Zero-copy pointer cast is safe because:
+    // 1. Bounds check above ensures data[pos..pos+20] is valid
+    // 2. RawOrderPriorityUpdateY is #[repr(packed)] matching ITCH binary layout (20 bytes)
+    // 3. We only read from the memory, never write
+    // 4. The lifetime 'a ensures data remains valid for the returned reference
+    // 5. Pointer alignment is safe because u8 slices have no alignment requirements
     let raw = unsafe { &*(data.as_ptr().add(pos) as *const RawOrderPriorityUpdateY) };
 
     // 5. Extract data and flip network Big-Endian format to CPU native integers

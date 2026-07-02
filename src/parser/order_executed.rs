@@ -19,7 +19,12 @@ pub fn parse_at<'a>(data: &'a [u8], pos: usize) -> (usize, ItchMessage<'a>) {
         panic!("Malformed ITCH packet: Buffer overflow while parsing OrderExecuted at position {}", pos);
     }
 
-    // 3. ZERO-COPY POINTER CAST: Pull data directly from memory addresses with zero allocation
+    // SAFETY: Zero-copy pointer cast is safe because:
+    // 1. Bounds check above ensures data[pos..pos+31] is valid
+    // 2. RawOrderExecuted is #[repr(packed)] matching ITCH binary layout (31 bytes)
+    // 3. We only read from the memory, never write
+    // 4. The lifetime 'a ensures data remains valid for the returned reference
+    // 5. Pointer alignment is safe because u8 slices have no alignment requirements
     let raw = unsafe { &*(data.as_ptr().add(pos) as *const RawOrderExecuted) };
 
     // 4. Extract data fields directly and flip network Big-Endian format to CPU format

@@ -20,7 +20,6 @@ pub enum ItchMessage<'a> {
     NetOrderImbalanceIndicator(NetOrderImbalanceIndicatorMessage),
     MarketParticipantPosition(MarketParticipantPositionMessage),
 
-    // ⚡ FIXED: Parent enum variant now carries the slice's lifetime parameter
     Unknown(UnknownMessage<'a>),
 }
 

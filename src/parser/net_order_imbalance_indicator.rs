@@ -24,7 +24,12 @@ pub fn parse_at<'a>(data: &'a [u8], pos: usize) -> (usize, ItchMessage<'a>) {
         panic!("Malformed ITCH packet: Buffer overflow while parsing NetOrderImbalanceIndicator at position {}", pos);
     }
 
-    // 3. ZERO-COPY POINTER CAST: Access memory coordinates directly with zero allocation
+    // SAFETY: Zero-copy pointer cast is safe because:
+    // 1. Bounds check above ensures data[pos..pos+43] is valid
+    // 2. RawNetOrderImbalanceIndicator is #[repr(packed)] matching ITCH binary layout (43 bytes)
+    // 3. We only read from the memory, never write
+    // 4. The lifetime 'a ensures data remains valid for the returned reference
+    // 5. Pointer alignment is safe because u8 slices have no alignment requirements
     let raw = unsafe { &*(data.as_ptr().add(pos) as *const RawNetOrderImbalanceIndicator) };
 
     // 4. Extract data directly from addresses and flip network Big-Endian format to CPU format

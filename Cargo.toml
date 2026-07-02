@@ -3,8 +3,16 @@ name = "orderBookEngine"
 version = "0.1.0"
 edition = "2024"
 authors = ["syashwanth87@gmail.com"]
-description = "A sample Rust application"
+description = "A high-performance ITCH protocol parser for NASDAQ order book data"
 license = "MIT"
+repository = "https://github.com/yourusername/orderBookEngine"
+keywords = ["itch", "nasdaq", "parser", "order-book", "market-data"]
+categories = ["parser-implementations", "finance"]
+readme = "README.md"
+
+[lib]
+name = "orderBookEngine"
+path = "src/lib.rs"
 
 [dependencies]
 memmap2 = "0.9"

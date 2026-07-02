@@ -1,6 +1,32 @@
 use std::collections::HashMap;
 use crate::schema::itchformat::ItchMessage;
 
+/// Collects statistics during ITCH message parsing
+///
+/// This collector tracks various metrics including message counts, unknown messages,
+/// timestamp regressions, and unknown message streaks.
+///
+/// # Example
+///
+/// ```no_run
+/// use orderBookEngine::utils::StatsCollector;
+/// use orderBookEngine::schema::itchformat::ItchMessage;
+/// use orderBookEngine::schema::itchformat::SystemEventMessage;
+///
+/// let mut stats = StatsCollector::new();
+///
+/// // Process messages
+/// let message = ItchMessage::SystemEvent(SystemEventMessage {
+///     stock_locate: 1,
+///     tracking_number: 1,
+///     timestamp: 0,
+///     event_code: b'O',
+/// });
+/// stats.process_message(&message);
+///
+/// // Print report
+/// stats.report();
+/// ```
 pub struct StatsCollector {
     unknown_streak: usize,
     max_unknown_streak: usize,
@@ -12,6 +38,7 @@ pub struct StatsCollector {
 }
 
 impl StatsCollector {
+    /// Creates a new statistics collector
     pub fn new() -> Self {
         Self {
             unknown_streak: 0,
