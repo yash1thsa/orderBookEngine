@@ -21,7 +21,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let file_path = &args[1];
-    let buffer = fs::read(file_path)?;
+    let file = std::fs::File::open(file_path)?;
+    let mmap = unsafe { memmap2::MmapOptions::new().map(&file)? };
+    let buffer: &[u8] = &mmap; // Behaves exactly like a normal byte slice!
 
     println!("File size: {} bytes", buffer.len());
 
