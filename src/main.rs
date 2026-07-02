@@ -9,7 +9,7 @@ mod utils;
 
 use parser::L3Parser;
 use schema::itchformat::ItchMessage;
-use utils::{ParquetWriter, StatsCollector};
+use utils::{L3Writer, StatsCollector};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
@@ -27,33 +27,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("File size: {} bytes", buffer.len());
 
-    // ---- HEXDUMP SAFETY ----
-    println!("\nRaw hexdump (first 80 bytes):");
-    for i in 0..buffer.len().min(80) {
-        if i % 16 == 0 {
-            print!("{:04x}: ", i);
-        }
-        print!("{:02x} ", buffer[i]);
-        if i % 16 == 15 {
-            println!();
-        }
-    }
-    if buffer.len() % 16 != 0 {
-        println!();
-    }
-
     // ---- PARSER ----
     let mut parser = L3Parser::new(&buffer);
-    let mut parquet_writer = ParquetWriter::new("./output".to_string(), 100_000);
+    let mut l3_writer = L3Writer::new("./output".to_string(), 3_000_000);
     //let mut stats = StatsCollector::new();
 
     while let Some(msg) = parser.parse_next() {
         //stats.process_message(&msg);
-        parquet_writer.add_message(msg);
+        l3_writer.add_message(msg);
     }
 
     // Flush remaining messages
-    parquet_writer.flush_remaining();
+    l3_writer.flush_remaining();
 
     // ---- STATISTICS ----
     //stats.report();
