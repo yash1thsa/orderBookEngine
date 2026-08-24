@@ -122,7 +122,7 @@ fn test_parse_all() {
     let mut data = Vec::new();
     
     // Add two SystemEvent messages
-    for i in 0..2 {
+    for i in 0..2u64 {
         data.extend_from_slice(&[0x00, 0x0C]); // length
         data.push(0x53); // type 'S'
         data.extend_from_slice(&[0x00, 0x01]); // stock_locate
