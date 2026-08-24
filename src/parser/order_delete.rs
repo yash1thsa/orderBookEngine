@@ -2,6 +2,7 @@ use crate::schema::itchformat::{ItchMessage, OrderDeleteMessage};
 
 // 1. Force the compiler to pack the struct matching the 19-byte OrderDelete spec
 #[repr(packed)]
+#[allow(dead_code)]
 struct RawOrderDelete {
     message_type: u8,            // Offset 0 (1 byte)
     stock_locate: u16,           // Offset 1 (2 bytes)

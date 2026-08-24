@@ -1,3 +1,9 @@
+#![allow(non_snake_case)]
+#![allow(clippy::new_without_default)]
+#![allow(clippy::collapsible_if)]
+#![allow(clippy::repr_packed_without_abi)]
+#![allow(clippy::module_inception)]
+
 //! # orderBookEngine
 //!
 //! A high-performance ITCH protocol parser for NASDAQ order book data.

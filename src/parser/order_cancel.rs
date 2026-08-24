@@ -2,6 +2,7 @@ use crate::schema::itchformat::{ItchMessage, OrderCancelMessage};
 
 // 1. Force the compiler to pack the struct matching the 23-byte OrderCancel spec
 #[repr(packed)]
+#[allow(dead_code)]
 struct RawOrderCancel {
     message_type: u8,            // Offset 0 (1 byte)
     stock_locate: u16,           // Offset 1 (2 bytes)

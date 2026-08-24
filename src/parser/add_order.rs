@@ -2,6 +2,7 @@ use crate::schema::itchformat::{ItchMessage, AddOrderMessage};
 
 // 1. Force the compiler to pack the struct exactly like the NASDAQ ITCH 5.0 binary network spec
 #[repr(packed)]
+#[allow(dead_code)]
 struct RawAddOrder {
     message_type: u8,           // Offset 0 (1 byte)
     stock_locate: u16,          // Offset 1 (2 bytes)

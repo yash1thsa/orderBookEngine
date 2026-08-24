@@ -2,6 +2,7 @@ use crate::schema::itchformat::{ItchMessage, NetOrderImbalanceIndicatorMessage};
 
 // 1. Force the compiler to pack the struct matching the 43-byte NOII spec layout
 #[repr(packed)]
+#[allow(dead_code)]
 struct RawNetOrderImbalanceIndicator {
     message_type: u8,               // Offset 0 (1 byte)
     stock_locate: u16,              // Offset 1 (2 bytes)

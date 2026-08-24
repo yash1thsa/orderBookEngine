@@ -2,6 +2,7 @@ use crate::schema::itchformat::{ItchMessage, OrderPriorityUpdateYMessage, Unknow
 
 // 1. Force the compiler to pack the struct matching the 20-byte OrderPriorityUpdateY spec layout
 #[repr(packed)]
+#[allow(dead_code)]
 struct RawOrderPriorityUpdateY {
     message_type: u8,     // Offset 0 (1 byte)
     stock_locate: u16,    // Offset 1 (2 bytes)

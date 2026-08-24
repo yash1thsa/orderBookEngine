@@ -2,6 +2,7 @@ use crate::schema::itchformat::{ItchMessage, MarketParticipantPositionMessage};
 
 // 1. Force the compiler to pack the struct matching the 26-byte MarketParticipantPosition spec
 #[repr(packed)]
+#[allow(dead_code)]
 struct RawMarketParticipantPosition {
     message_type: u8,               // Offset 0 (1 byte)
     stock_locate: u16,              // Offset 1 (2 bytes)

@@ -1,10 +1,8 @@
 use std::env;
-use std::fs;
 use std::io::Write;
 use std::time::Instant;
 
 use orderBookEngine::parser::L3Parser;
-use orderBookEngine::schema::itchformat::ItchMessage;
 use orderBookEngine::utils::{L3Writer, StatsCollector};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -29,7 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("File size: {} bytes", buffer.len());
 
     // ---- PARSER ----
-    let mut parser = L3Parser::new(&buffer);
+    let mut parser = L3Parser::new(buffer);
     let mut l3_writer = L3Writer::new("./output".to_string(), 3_000_000);
     let mut stats = StatsCollector::new();
 
