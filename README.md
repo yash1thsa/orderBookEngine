@@ -25,7 +25,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-orderBookEngine = "0.1.1"
+orderBookEngine = "0.1.2"
 ```
 
 ## Library Usage
