@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Crates.io](https://img.shields.io/crates/v/orderBookEngine)](https://crates.io/crates/orderBookEngine)
-[![Build Status](https://github.com/yourusername/orderBookEngine/workflows/CI/badge.svg)](https://github.com/yourusername/orderBookEngine/actions)
+[![Build Status](https://github.com/yash1thsa/orderBookEngine/workflows/CI/badge.svg)](https://github.com/yash1thsa/orderBookEngine/actions)
 [![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org)
 
 A high-performance ITCH protocol parser for NASDAQ order book data written in Rust.
