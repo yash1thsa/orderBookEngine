@@ -69,7 +69,8 @@ let mmap = unsafe { memmap2::MmapOptions::new().map(&file)? };
 let buffer: &[u8] = &mmap;
 
 let mut parser = L3Parser::new(&buffer);
-let mut writer = L3Writer::new("./output".to_string(), 10000);
+let output_path = "./output"; // Configure your output path here
+let mut writer = L3Writer::new(output_path.to_string(), 10000);
 
 while let Some(msg) = parser.parse_next() {
     writer.add_message(msg);
@@ -101,7 +102,12 @@ The library also includes a CLI tool for quick parsing:
 
 ```bash
 cargo build --release
-./target/release/orderBookEngine <input_file>
+./target/release/orderBookEngine <input_file> <output_path>
+```
+
+Example:
+```bash
+./target/release/orderBookEngine data.itch ./output
 ```
 
 ## Supported ITCH Message Types
