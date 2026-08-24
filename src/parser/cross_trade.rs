@@ -1,4 +1,4 @@
-use crate::schema::itchformat::{ItchMessage, CrossTradeMessage};
+use crate::schema::itchformat::{CrossTradeMessage, ItchMessage};
 
 // 1. Force the compiler to pack the struct matching the 40-byte CrossTrade spec
 #[repr(packed)]
@@ -19,7 +19,10 @@ struct RawCrossTrade {
 pub fn parse_at<'a>(data: &'a [u8], pos: usize) -> (usize, ItchMessage<'a>) {
     // Safety boundary check
     if pos + 40 > data.len() {
-        panic!("Malformed ITCH packet: Buffer overflow while parsing CrossTrade at position {}", pos);
+        panic!(
+            "Malformed ITCH packet: Buffer overflow while parsing CrossTrade at position {}",
+            pos
+        );
     }
 
     // SAFETY: Zero-copy pointer cast is safe because:

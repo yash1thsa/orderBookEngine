@@ -73,8 +73,8 @@ impl<'a> ItchMessage<'a> {
 }
 
 /* =========================
-   CORE MESSAGES
-   ========================= */
+CORE MESSAGES
+========================= */
 
 #[derive(Debug)]
 pub struct SystemEventMessage {
@@ -149,8 +149,8 @@ pub struct StockTradingActionMessage {
 }
 
 /* =========================
-   ORDER ENTRY
-   ========================= */
+ORDER ENTRY
+========================= */
 
 #[derive(Debug)]
 pub struct AddOrderMessage {
@@ -178,8 +178,8 @@ pub struct AddOrderMPIDMessage {
 }
 
 /* =========================
-   ORDER EVENTS
-   ========================= */
+ORDER EVENTS
+========================= */
 
 #[derive(Debug)]
 pub struct OrderExecutedMessage {
@@ -232,8 +232,8 @@ pub struct OrderReplaceMessage {
 }
 
 /* =========================
-   TRADE MESSAGES
-   ========================= */
+TRADE MESSAGES
+========================= */
 
 #[derive(Debug)]
 pub struct TradeMessage {
@@ -261,8 +261,8 @@ pub struct CrossTradeMessage {
 }
 
 /* =========================
-   UNKNOWN
-   ========================= */
+UNKNOWN
+========================= */
 
 #[derive(Clone, Debug)]
 pub struct UnknownMessage<'a> {

@@ -8,7 +8,7 @@ use std::env;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
-    
+
     if args.len() < 2 {
         eprintln!("Usage: {} <itch_file>", args[0]);
         std::process::exit(1);
@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let file_path = &args[1];
     let file = std::fs::File::open(file_path)?;
-    
+
     // Memory map the file for efficient reading
     let mmap = unsafe { memmap2::MmapOptions::new().map(&file)? };
     let buffer: &[u8] = &mmap;
@@ -29,21 +29,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     while let Some(msg) = parser.parse_next() {
         count += 1;
-        
+
         // Print first 10 messages for demonstration
         if count <= 10 {
             match &msg {
                 ItchMessage::SystemEvent(event) => {
-                    println!("SystemEvent: timestamp={}, event_code={}", 
-                             event.timestamp, event.event_code);
+                    println!(
+                        "SystemEvent: timestamp={}, event_code={}",
+                        event.timestamp, event.event_code
+                    );
                 }
                 ItchMessage::AddOrder(order) => {
-                    println!("AddOrder: stock_locate={}, shares={}", 
-                             order.stock_locate, order.shares);
+                    println!(
+                        "AddOrder: stock_locate={}, shares={}",
+                        order.stock_locate, order.shares
+                    );
                 }
                 ItchMessage::Trade(trade) => {
-                    println!("Trade: shares={}, price={}", 
-                             trade.shares, trade.price);
+                    println!("Trade: shares={}, price={}", trade.shares, trade.price);
                 }
                 _ => {
                     println!("Message type: {}", msg.name());

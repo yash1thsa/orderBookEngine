@@ -1,25 +1,28 @@
-use crate::schema::itchformat::{ItchMessage, AddOrderMessage};
+use crate::schema::itchformat::{AddOrderMessage, ItchMessage};
 
 // 1. Force the compiler to pack the struct exactly like the NASDAQ ITCH 5.0 binary network spec
 #[repr(packed)]
 #[allow(dead_code)]
 struct RawAddOrder {
-    message_type: u8,           // Offset 0 (1 byte)
-    stock_locate: u16,          // Offset 1 (2 bytes)
-    tracking_number: u16,       // Offset 3 (2 bytes)
-    timestamp: [u8; 6],         // Offset 5 (6 bytes)
+    message_type: u8,            // Offset 0 (1 byte)
+    stock_locate: u16,           // Offset 1 (2 bytes)
+    tracking_number: u16,        // Offset 3 (2 bytes)
+    timestamp: [u8; 6],          // Offset 5 (6 bytes)
     order_reference_number: u64, // Offset 11 (8 bytes)
-    buy_sell_indicator: u8,     // Offset 19 (1 byte)
-    shares: u32,                // Offset 20 (4 bytes)
-    stock: [u8; 8],             // Offset 24 (8 bytes)
-    price: u32,                 // Offset 32 (4 bytes)
+    buy_sell_indicator: u8,      // Offset 19 (1 byte)
+    shares: u32,                 // Offset 20 (4 bytes)
+    stock: [u8; 8],              // Offset 24 (8 bytes)
+    price: u32,                  // Offset 32 (4 bytes)
 }
 
 // 2. Accept and return the lifetime parameter '<'a>' to tie it to your main file buffer
 pub fn parse_at<'a>(data: &'a [u8], pos: usize) -> (usize, ItchMessage<'a>) {
     // Safety check: Ensure the remaining data can safely fit the 36-byte AddOrder message packet
     if pos + 36 > data.len() {
-        panic!("Malformed ITCH packet: Buffer overflow while parsing AddOrder at position {}", pos);
+        panic!(
+            "Malformed ITCH packet: Buffer overflow while parsing AddOrder at position {}",
+            pos
+        );
     }
 
     // SAFETY: Zero-copy pointer cast is safe because:
@@ -82,12 +85,13 @@ mod tests {
         // Stock: "AAPL    " (8 bytes)
         // Price: 15000 (0x00003A98) - representing $150.00
         let data: [u8; 36] = [
-            0x41,                   // message_type
-            0x03, 0xE8,             // stock_locate (1000 in big-endian)
-            0x07, 0xD0,             // tracking_number (2000 in big-endian)
+            0x41, // message_type
+            0x03, 0xE8, // stock_locate (1000 in big-endian)
+            0x07, 0xD0, // tracking_number (2000 in big-endian)
             0x00, 0x00, 0x00, 0x00, 0x00, 0x01, // timestamp
-            0x00, 0x00, 0x00, 0x00, 0x07, 0x5B, 0xCD, 0x15, // order_reference_number (123456789 in big-endian)
-            0x42,                   // buy_sell_indicator ('B')
+            0x00, 0x00, 0x00, 0x00, 0x07, 0x5B, 0xCD,
+            0x15, // order_reference_number (123456789 in big-endian)
+            0x42, // buy_sell_indicator ('B')
             0x00, 0x00, 0x01, 0xF4, // shares (500 in big-endian)
             0x41, 0x41, 0x50, 0x4C, 0x20, 0x20, 0x20, 0x20, // stock ("AAPL    ")
             0x00, 0x00, 0x3A, 0x98, // price (15000 in big-endian)
@@ -128,25 +132,42 @@ mod tests {
     fn test_parse_add_order_sell_indicator() {
         // Test with sell indicator
         let mut data: [u8; 36] = [0; 36];
-        data[0] = 0x41;               // message_type
-        data[1] = 0x00; data[2] = 0x01; // stock_locate
-        data[3] = 0x00; data[4] = 0x02; // tracking_number
-        data[5] = 0x00; data[6] = 0x00;
-        data[7] = 0x00; data[8] = 0x00;
-        data[9] = 0x00; data[10] = 0x01; // timestamp
-        data[11] = 0x00; data[12] = 0x00;
-        data[13] = 0x00; data[14] = 0x00;
-        data[15] = 0x00; data[16] = 0x00;
-        data[17] = 0x00; data[18] = 0x01; // order_reference_number
-        data[19] = 0x53;               // buy_sell_indicator ('S' for sell)
-        data[20] = 0x00; data[21] = 0x00;
-        data[22] = 0x00; data[23] = 0x01; // shares
-        data[24] = 0x54; data[25] = 0x45;
-        data[26] = 0x53; data[27] = 0x54;
-        data[28] = 0x20; data[29] = 0x20;
-        data[30] = 0x20; data[31] = 0x20; // stock ("TEST    ")
-        data[32] = 0x00; data[33] = 0x00;
-        data[34] = 0x00; data[35] = 0x01; // price
+        data[0] = 0x41; // message_type
+        data[1] = 0x00;
+        data[2] = 0x01; // stock_locate
+        data[3] = 0x00;
+        data[4] = 0x02; // tracking_number
+        data[5] = 0x00;
+        data[6] = 0x00;
+        data[7] = 0x00;
+        data[8] = 0x00;
+        data[9] = 0x00;
+        data[10] = 0x01; // timestamp
+        data[11] = 0x00;
+        data[12] = 0x00;
+        data[13] = 0x00;
+        data[14] = 0x00;
+        data[15] = 0x00;
+        data[16] = 0x00;
+        data[17] = 0x00;
+        data[18] = 0x01; // order_reference_number
+        data[19] = 0x53; // buy_sell_indicator ('S' for sell)
+        data[20] = 0x00;
+        data[21] = 0x00;
+        data[22] = 0x00;
+        data[23] = 0x01; // shares
+        data[24] = 0x54;
+        data[25] = 0x45;
+        data[26] = 0x53;
+        data[27] = 0x54;
+        data[28] = 0x20;
+        data[29] = 0x20;
+        data[30] = 0x20;
+        data[31] = 0x20; // stock ("TEST    ")
+        data[32] = 0x00;
+        data[33] = 0x00;
+        data[34] = 0x00;
+        data[35] = 0x01; // price
 
         let (bytes_consumed, msg) = parse_at(&data, 0);
 

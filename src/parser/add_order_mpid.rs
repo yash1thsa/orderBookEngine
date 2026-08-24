@@ -1,4 +1,4 @@
-use crate::schema::itchformat::{ItchMessage, AddOrderMPIDMessage};
+use crate::schema::itchformat::{AddOrderMPIDMessage, ItchMessage};
 
 // 1. Force the compiler to pack the struct matching the 40-byte AddOrderMPID spec
 #[repr(packed)]
@@ -8,7 +8,7 @@ struct RawAddOrderMPID {
     stock_locate: u16,           // Offset 1 (2 bytes)
     tracking_number: u16,        // Offset 3 (2 bytes)
     timestamp: [u8; 6],          // Offset 5 (6 bytes)
-    order_reference_number: u64,  // Offset 11 (8 bytes)
+    order_reference_number: u64, // Offset 11 (8 bytes)
     buy_sell_indicator: u8,      // Offset 19 (1 byte)
     shares: u32,                 // Offset 20 (4 bytes)
     stock: [u8; 8],              // Offset 24 (8 bytes)
@@ -20,7 +20,10 @@ struct RawAddOrderMPID {
 pub fn parse_at<'a>(data: &'a [u8], pos: usize) -> (usize, ItchMessage<'a>) {
     // Safety boundary validation check
     if pos + 40 > data.len() {
-        panic!("Malformed ITCH packet: Buffer overflow while parsing AddOrderMPID at position {}", pos);
+        panic!(
+            "Malformed ITCH packet: Buffer overflow while parsing AddOrderMPID at position {}",
+            pos
+        );
     }
 
     // SAFETY: Zero-copy pointer cast is safe because:

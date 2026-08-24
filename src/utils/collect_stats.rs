@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::schema::itchformat::ItchMessage;
+use std::collections::HashMap;
 
 /// Collects statistics during ITCH message parsing
 ///
@@ -62,7 +62,10 @@ impl StatsCollector {
             self.unknown_count += 1;
 
             if let ItchMessage::Unknown(unknown_msg) = msg {
-                *self.unknown_types.entry(unknown_msg.message_type).or_insert(0) += 1;
+                *self
+                    .unknown_types
+                    .entry(unknown_msg.message_type)
+                    .or_insert(0) += 1;
             }
 
             if self.unknown_streak > 1000 {

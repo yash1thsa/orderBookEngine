@@ -20,7 +20,10 @@ struct RawTrade {
 pub fn parse_at<'a>(data: &'a [u8], pos: usize) -> (usize, ItchMessage<'a>) {
     // Safety boundary validation check
     if pos + 44 > data.len() {
-        panic!("Malformed ITCH packet: Buffer overflow while parsing Trade at position {}", pos);
+        panic!(
+            "Malformed ITCH packet: Buffer overflow while parsing Trade at position {}",
+            pos
+        );
     }
 
     // SAFETY: Zero-copy pointer cast is safe because:

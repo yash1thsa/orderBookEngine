@@ -5,9 +5,9 @@ use orderBookEngine::schema::itchformat::ItchMessage;
 fn test_parser_integration() {
     // Create a minimal ITCH-like byte sequence with multiple message types
     // Format: [2-byte length][1-byte message type][message body]
-    
+
     let mut data = Vec::new();
-    
+
     // SystemEvent message (12 bytes total)
     // Length: 12, Type: 'S' (0x53)
     data.extend_from_slice(&[0x00, 0x0C]); // length (12 bytes, not including length field)
@@ -16,7 +16,7 @@ fn test_parser_integration() {
     data.extend_from_slice(&[0x00, 0x02]); // tracking_number (2)
     data.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x01]); // timestamp (1)
     data.push(0x4F); // event_code ('O')
-    
+
     // AddOrder message (36 bytes total)
     // Length: 36, Type: 'A' (0x41)
     data.extend_from_slice(&[0x00, 0x24]); // length (36 bytes)
@@ -29,13 +29,13 @@ fn test_parser_integration() {
     data.extend_from_slice(&[0x00, 0x00, 0x00, 0x64]); // shares (100)
     data.extend_from_slice(b"TEST    "); // stock
     data.extend_from_slice(&[0x00, 0x00, 0x27, 0x10]); // price (10000)
-    
+
     let mut parser = L3Parser::new(&data);
-    
+
     // Parse first message (SystemEvent)
     let msg1 = parser.parse_next();
     assert!(msg1.is_some());
-    
+
     match msg1.unwrap() {
         ItchMessage::SystemEvent(sys_event) => {
             assert_eq!(sys_event.stock_locate, 1);
@@ -45,11 +45,11 @@ fn test_parser_integration() {
         }
         _ => panic!("Expected SystemEvent"),
     }
-    
+
     // Parse second message (AddOrder)
     let msg2 = parser.parse_next();
     assert!(msg2.is_some());
-    
+
     match msg2.unwrap() {
         ItchMessage::AddOrder(add_order) => {
             assert_eq!(add_order.stock_locate, 3);
@@ -63,7 +63,7 @@ fn test_parser_integration() {
         }
         _ => panic!("Expected AddOrder"),
     }
-    
+
     // No more messages
     let msg3 = parser.parse_next();
     assert!(msg3.is_none());
@@ -74,22 +74,22 @@ fn test_parser_position_tracking() {
     // Test that parser correctly tracks position through messages
     let data: Vec<u8> = vec![
         0x00, 0x0C, // length (12)
-        0x53,       // type 'S'
+        0x53, // type 'S'
         0x00, 0x01, // stock_locate
         0x00, 0x02, // tracking_number
         0x00, 0x00, 0x00, 0x00, 0x00, 0x01, // timestamp
-        0x4F,       // event_code
+        0x4F, // event_code
     ];
-    
+
     let mut parser = L3Parser::new(&data);
-    
+
     // Initial position should be 0
     assert_eq!(parser.position(), 0);
-    
+
     // After parsing, position should advance
     parser.parse_next();
     assert_eq!(parser.position(), 14); // 2 (length) + 12 (message)
-    
+
     // No more messages, position should be at end
     assert!(parser.parse_next().is_none());
 }
@@ -98,7 +98,7 @@ fn test_parser_position_tracking() {
 fn test_parser_empty_data() {
     let data: &[u8] = &[];
     let mut parser = L3Parser::new(data);
-    
+
     assert!(parser.parse_next().is_none());
 }
 
@@ -107,12 +107,12 @@ fn test_parser_incomplete_message() {
     // Data with incomplete message (length says 12 bytes but only 5 available)
     let data: Vec<u8> = vec![
         0x00, 0x0C, // length (12)
-        0x53,       // type 'S'
+        0x53, // type 'S'
         0x00, 0x01, // stock_locate
     ];
-    
+
     let mut parser = L3Parser::new(&data);
-    
+
     // Should return None for incomplete message
     assert!(parser.parse_next().is_none());
 }
@@ -120,7 +120,7 @@ fn test_parser_incomplete_message() {
 #[test]
 fn test_parse_all() {
     let mut data = Vec::new();
-    
+
     // Add two SystemEvent messages
     for i in 0..2u64 {
         data.extend_from_slice(&[0x00, 0x0C]); // length
@@ -130,19 +130,19 @@ fn test_parse_all() {
         data.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, i as u8]); // timestamp
         data.push(0x4F); // event_code
     }
-    
+
     let mut parser = L3Parser::new(&data);
     let messages = parser.parse_all();
-    
+
     assert_eq!(messages.len(), 2);
-    
+
     match &messages[0] {
         ItchMessage::SystemEvent(sys_event) => {
             assert_eq!(sys_event.timestamp, 0);
         }
         _ => panic!("Expected SystemEvent"),
     }
-    
+
     match &messages[1] {
         ItchMessage::SystemEvent(sys_event) => {
             assert_eq!(sys_event.timestamp, 1);

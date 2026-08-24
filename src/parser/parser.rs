@@ -1,21 +1,10 @@
 use crate::schema::itchformat::{ItchMessage, UnknownMessage};
 
 use super::{
-    add_order,
-    add_order_mpid,
-    order_executed_with_price,
-    order_cancel,
-    order_executed,
-    order_delete,
-    order_replace,
-    cross_trade,
-    stock_trading_action,
-    trade,
-    stock_directory,
-    order_priority_update_y,
-    net_order_imbalance_indicator,
-    market_participant_position,
-    system_event
+    add_order, add_order_mpid, cross_trade, market_participant_position,
+    net_order_imbalance_indicator, order_cancel, order_delete, order_executed,
+    order_executed_with_price, order_priority_update_y, order_replace, stock_directory,
+    stock_trading_action, system_event, trade,
 };
 
 /// ITCH protocol message types
@@ -138,10 +127,7 @@ impl<'a> L3Parser<'a> {
         }
 
         // Length of ITCH message (does NOT include the 2-byte length field)
-        let msg_len = u16::from_be_bytes([
-            self.data[self.pos],
-            self.data[self.pos + 1],
-        ]) as usize;
+        let msg_len = u16::from_be_bytes([self.data[self.pos], self.data[self.pos + 1]]) as usize;
 
         // Ensure the full message is available
         if self.pos + 2 + msg_len > self.data.len() {
@@ -159,46 +145,24 @@ impl<'a> L3Parser<'a> {
         // NOTE: Make sure your sub-modules (add_order, trade, etc.) are also refactored
         // to return (usize, ItchMessage<'a>)
         let (_, msg) = match msg_type {
-            MessageType::SystemEvent => {
-                system_event::parse_at(self.data, msg_start)
-            }
+            MessageType::SystemEvent => system_event::parse_at(self.data, msg_start),
 
-            MessageType::StockDirectory => {
-                stock_directory::parse_at(self.data, msg_start)
-            }
+            MessageType::StockDirectory => stock_directory::parse_at(self.data, msg_start),
 
-            MessageType::AddOrder => {
-                add_order::parse_at(self.data, msg_start)
-            }
+            MessageType::AddOrder => add_order::parse_at(self.data, msg_start),
 
-            MessageType::OrderExecuted => {
-                order_executed::parse_at(self.data, msg_start)
-            }
+            MessageType::OrderExecuted => order_executed::parse_at(self.data, msg_start),
 
-            MessageType::OrderCancel => {
-                order_cancel::parse_at(self.data, msg_start)
-            }
-            MessageType::AddOrderMPID => {
-                add_order_mpid::parse_at(self.data, msg_start)
-            }
+            MessageType::OrderCancel => order_cancel::parse_at(self.data, msg_start),
+            MessageType::AddOrderMPID => add_order_mpid::parse_at(self.data, msg_start),
             MessageType::OrderExecutedWithPrice => {
                 order_executed_with_price::parse_at(self.data, msg_start)
             }
-            MessageType::CrossTrade => {
-                cross_trade::parse_at(self.data, msg_start)
-            }
-            MessageType::Trade => {
-                trade::parse_at(self.data, msg_start)
-            }
-            MessageType::OrderDelete => {
-                order_delete::parse_at(self.data, msg_start)
-            }
-            MessageType::OrderReplace => {
-                order_replace::parse_at(self.data, msg_start)
-            }
-            MessageType::StockTradingAction => {
-                stock_trading_action::parse_at(self.data, msg_start)
-            }
+            MessageType::CrossTrade => cross_trade::parse_at(self.data, msg_start),
+            MessageType::Trade => trade::parse_at(self.data, msg_start),
+            MessageType::OrderDelete => order_delete::parse_at(self.data, msg_start),
+            MessageType::OrderReplace => order_replace::parse_at(self.data, msg_start),
+            MessageType::StockTradingAction => stock_trading_action::parse_at(self.data, msg_start),
             MessageType::OrderPriorityUpdateY => {
                 order_priority_update_y::parse_at(self.data, msg_start)
             }

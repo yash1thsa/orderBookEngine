@@ -4,25 +4,28 @@ use crate::schema::itchformat::{ItchMessage, NetOrderImbalanceIndicatorMessage};
 #[repr(packed)]
 #[allow(dead_code)]
 struct RawNetOrderImbalanceIndicator {
-    message_type: u8,               // Offset 0 (1 byte)
-    stock_locate: u16,              // Offset 1 (2 bytes)
-    tracking_number: u16,           // Offset 3 (2 bytes)
-    timestamp: [u8; 6],             // Offset 5 (6 bytes)
-    paired_shares: u64,             // Offset 11 (8 bytes)
-    imbalance_shares: u64,          // Offset 19 (8 bytes)
-    current_reference_price: u32,   // Offset 27 (4 bytes)
-    buy_sell_indicator: u8,         // Offset 31 (1 byte) -> Kept as padding/placeholder to preserve offsets
-    cross_type: u8,                 // Offset 32 (1 byte)
-    price_variation_indicator: u8,  // Offset 33 (1 byte)
-    imbalance_direction: u8,        // Offset 34 (1 byte)
-    stock: [u8; 8],                 // Offset 35 (8 bytes)
+    message_type: u8,              // Offset 0 (1 byte)
+    stock_locate: u16,             // Offset 1 (2 bytes)
+    tracking_number: u16,          // Offset 3 (2 bytes)
+    timestamp: [u8; 6],            // Offset 5 (6 bytes)
+    paired_shares: u64,            // Offset 11 (8 bytes)
+    imbalance_shares: u64,         // Offset 19 (8 bytes)
+    current_reference_price: u32,  // Offset 27 (4 bytes)
+    buy_sell_indicator: u8, // Offset 31 (1 byte) -> Kept as padding/placeholder to preserve offsets
+    cross_type: u8,         // Offset 32 (1 byte)
+    price_variation_indicator: u8, // Offset 33 (1 byte)
+    imbalance_direction: u8, // Offset 34 (1 byte)
+    stock: [u8; 8],         // Offset 35 (8 bytes)
 }
 
 // 2. Accept and return the lifetime parameter '<'a>' for zero-copy connection
 pub fn parse_at<'a>(data: &'a [u8], pos: usize) -> (usize, ItchMessage<'a>) {
     // Safety boundary validation check
     if pos + 43 > data.len() {
-        panic!("Malformed ITCH packet: Buffer overflow while parsing NetOrderImbalanceIndicator at position {}", pos);
+        panic!(
+            "Malformed ITCH packet: Buffer overflow while parsing NetOrderImbalanceIndicator at position {}",
+            pos
+        );
     }
 
     // SAFETY: Zero-copy pointer cast is safe because:
@@ -65,8 +68,8 @@ pub fn parse_at<'a>(data: &'a [u8], pos: usize) -> (usize, ItchMessage<'a>) {
             imbalance_shares,
             imbalance_direction,
             stock,
-            far_price: 0,   // Kept as 0 to maintain your exact struct signature
-            near_price: 0,  // Kept as 0 to maintain your exact struct signature
+            far_price: 0,  // Kept as 0 to maintain your exact struct signature
+            near_price: 0, // Kept as 0 to maintain your exact struct signature
             current_reference_price,
             cross_type,
             price_variation_indicator,

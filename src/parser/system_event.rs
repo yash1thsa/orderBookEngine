@@ -15,7 +15,10 @@ struct RawSystemEvent {
 pub fn parse_at<'a>(data: &'a [u8], pos: usize) -> (usize, ItchMessage<'a>) {
     // Safety boundary validation check
     if pos + 12 > data.len() {
-        panic!("Malformed ITCH packet: Buffer overflow while parsing SystemEvent at position {}", pos);
+        panic!(
+            "Malformed ITCH packet: Buffer overflow while parsing SystemEvent at position {}",
+            pos
+        );
     }
 
     // SAFETY: Zero-copy pointer cast is safe because:
@@ -64,11 +67,11 @@ mod tests {
         // Timestamp: [0x00, 0x00, 0x00, 0x00, 0x00, 0x01]
         // Event code: 'O' (0x4F) - Start of messages
         let data: [u8; 12] = [
-            0x53,                   // message_type
-            0x04, 0xD2,             // stock_locate (1234 in big-endian)
-            0x16, 0x2E,             // tracking_number (5678 in big-endian)
+            0x53, // message_type
+            0x04, 0xD2, // stock_locate (1234 in big-endian)
+            0x16, 0x2E, // tracking_number (5678 in big-endian)
             0x00, 0x00, 0x00, 0x00, 0x00, 0x01, // timestamp
-            0x4F,                   // event_code ('O')
+            0x4F, // event_code ('O')
         ];
 
         let (bytes_consumed, msg) = parse_at(&data, 0);
@@ -103,13 +106,18 @@ mod tests {
         // Test parsing at a non-zero offset
         let mut data: [u8; 20] = [0; 20];
         // Insert SystemEvent at offset 5
-        data[5] = 0x53;               // message_type
-        data[6] = 0x00; data[7] = 0x01; // stock_locate
-        data[8] = 0x00; data[9] = 0x02; // tracking_number
-        data[10] = 0x00; data[11] = 0x00;
-        data[12] = 0x00; data[13] = 0x00;
-        data[14] = 0x00; data[15] = 0x01; // timestamp
-        data[16] = 0x4F;               // event_code
+        data[5] = 0x53; // message_type
+        data[6] = 0x00;
+        data[7] = 0x01; // stock_locate
+        data[8] = 0x00;
+        data[9] = 0x02; // tracking_number
+        data[10] = 0x00;
+        data[11] = 0x00;
+        data[12] = 0x00;
+        data[13] = 0x00;
+        data[14] = 0x00;
+        data[15] = 0x01; // timestamp
+        data[16] = 0x4F; // event_code
 
         let (bytes_consumed, msg) = parse_at(&data, 5);
 
